@@ -1,61 +1,24 @@
-hero.dy += hero.grav;
-            hero.y += hero.dy;
-            if (hero.y > groundY - hero.h) {
-                hero.y = groundY - hero.h;
-                hero.dy = 0;
-                hero.onGround = true;
-            }
-
-            // رسم البطل بلمسة ذهبية متدرجة
-            let grad = ctx.createLinearGradient(hero.x, hero.y, hero.x, hero.y+hero.h);
-            grad.addColorStop(0, '#f1c40f');
-            grad.addColorStop(1, '#d4af37');
-            ctx.fillStyle = grad;
-            ctx.roundRect(hero.x, hero.y, hero.w, hero.h, 10).fill();
-
-            if (Math.random() < 0.02) obstacles.push({ x: canvas.width, w: 35, h: 55, c: '#ff4d4d' });
-            
-            obstacles.forEach((o, i) => {
-                o.x -= (7 + level);
-                ctx.fillStyle = o.c;
-                ctx.roundRect(o.x, groundY - o.h, o.w, o.h, 5).fill();
-
-                if (hero.x < o.x + o.w && hero.x + hero.w > o.x && hero.y + hero.h > groundY - o.h) {
-                    active = false;
-                    loseSnd.play();
-                    tg.HapticFeedback.notificationOccurred('error');
-                    setTimeout(() => location.reload(), 1000);
-                }
-
-                if (o.x < -o.w) {
+if (o.x < -o.w) {
                     obstacles.splice(i, 1);
                     score++;
-                    document.getElementById('score').innerText = score;
+                    scoreSound.play(); // صوت عند تخطي عائق
+                    document.getElementById('score-val').innerText = score;
                     if (score % 10 === 0) {
                         level++;
-                        document.getElementById('level').innerText = level;
-                        tg.HapticFeedback.impactOccurred('medium');
+                        document.getElementById('level-val').innerText = level;
+                        tg.HapticFeedback.impactOccurred('medium'); // اهتزاز عند زيادة المستوى
                     }
                 }
             });
-
             requestAnimationFrame(loop);
         }
-
-        // دعم الـ RoundRect للمتصفحات القديمة
-        CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
-            if (w < 2 * r) r = w / 2; if (h < 2 * r) r = h / 2;
-            this.beginPath(); this.moveTo(x + r, y); this.arcTo(x + w, y, x + w, y + h, r);
-            this.arcTo(x + w, y + h, x, y + h, r); this.arcTo(x, y + h, x, y, r);
-            this.arcTo(x, y, x + w, y, r); this.closePath(); return this;
-        };
 
         const handleJump = () => {
             if (hero.onGround && active) {
                 hero.dy = hero.jump;
                 hero.onGround = false;
-                jumpSnd.play();
-                tg.HapticFeedback.impactOccurred('light');
+                jumpSound.play(); // صوت قفزة
+                tg.HapticFeedback.impactOccurred('light'); // اهتزاز خفيف
             }
         };
 
