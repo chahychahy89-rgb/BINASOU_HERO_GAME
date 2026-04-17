@@ -1,52 +1,4 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BINASOU HERO GAME</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; touch-action: manipulation; text-align: center; }
-        canvas { display: block; background: #0a0a0a; }
-        .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.9); z-index: 100; }
-        .btn { background: #d4af37; border: none; padding: 15px 40px; font-size: 20px; font-weight: bold; border-radius: 50px; cursor: pointer; color: #000; margin-top: 20px; }
-        #ui { position: fixed; top: 10px; width: 100%; display: flex; justify-content: space-around; font-size: 20px; font-weight: bold; pointer-events: none; }
-    </style>
-</head>
-<body>
-    <div id="start-screen" class="overlay">
-        <h1 style="color: #d4af37;">BINASOU HERO</h1>
-        <p>مرحباً بك في عالم الأبطال الذهبيين</p>
-        <button class="btn" onclick="startGame()">إبدأ الآن</button>
-    </div>
-    <div id="ui">
-        <div>🔥: <span id="score">0</span></div>
-        <div>🚀: <span id="level">1</span></div>
-    </div>
-    <canvas id="game"></canvas>
-    <script>
-        const canvas = document.getElementById('game');
-        const ctx = canvas.getContext('2d');
-        let score = 0, level = 1, active = false, obstacles = [];
-        const hero = { x: 50, y: 0, w: 40, h: 60, dy: 0, jump: -15, grav: 0.8, grounded: false };
-
-        function startGame() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            document.getElementById('start-screen').style.display = 'none';
-            active = true;
-            update();
-        }
-
-        function update() {
-            if (!active) return;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // الأرضية
-            ctx.fillStyle = '#222';
-            ctx.fillRect(0, canvas.height - 80, canvas.width, 80);
-
-            // الجاذبية والقفز
+// فيزياء البطل
             hero.dy += hero.grav;
             hero.y += hero.dy;
             if (hero.y > canvas.height - 80 - hero.h) {
@@ -55,25 +7,42 @@
                 hero.grounded = true;
             }
 
-            // رسم البطل (مربع ذهبي حالياً)
-            ctx.fillStyle = '#d4af37';
-            ctx.fillRect(hero.x, hero.y, hero.w, hero.h);
+            drawHero();
 
             // العوائق
-            if (Math.random() < 0.02) obstacles.push({ x: canvas.width, w: 30, h: 40 });
+            if (Math.random() < 0.02) obstacles.push({ x: canvas.width, w: 35, h: 50 });
+
             obstacles.forEach((o, i) => {
-                o.x -= (6 + level);
-                ctx.fillStyle = '#ff4d4d';
+                o.x -= (7 + level);
+                ctx.fillStyle = '#C0C0C0'; // عوائق فضية
                 ctx.fillRect(o.x, canvas.height - 80 - o.h, o.w, o.h);
-                if (hero.x < o.x + o.w && hero.x + hero.w > o.x && hero.y + hero.h > canvas.height - 80 - o.h) location.reload();
-                if (o.x < -o.w) { obstacles.splice(i, 1); score++; document.getElementById('score').innerText = score; if(score%10===0) level++; document.getElementById('level').innerText = level; }
+
+                // التصادم
+                if (hero.x < o.x + o.w && hero.x + hero.w > o.x && hero.y + hero.h > canvas.height - 80 - o.h) {
+                    location.reload(); 
+                }
+
+                // النقاط والمستويات
+                if (o.x < -o.w) {
+                    obstacles.splice(i, 1);
+                    score++;
+                    document.getElementById('score').innerText = score;
+                    if (score % 10 === 0) {
+                        level++;
+                        document.getElementById('level').innerText = level;
+                        active = false;
+                        document.getElementById('ad-screen').classList.remove('hidden');
+                    }
+                }
             });
 
-            requestAnimationFrame(update);
+            requestAnimationFrame(animate);
         }
 
-        window.addEventListener('touchstart', () => { if(hero.grounded) { hero.dy = hero.jump; hero.grounded = false; } });
-        window.addEventListener('mousedown', () => { if(hero.grounded) { hero.dy = hero.jump; hero.grounded = false; } });
+        // التحكم باللمس والماوس
+        const jumpAction = () => { if(hero.grounded && active) { hero.dy = hero.jump; hero.grounded = false; } };
+        window.addEventListener('touchstart', jumpAction);
+        window.addEventListener('mousedown', jumpAction);
     </script>
 </body>
 </html>
