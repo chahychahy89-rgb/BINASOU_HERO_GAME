@@ -1,48 +1,93 @@
-// فيزياء البطل
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BINASOU HERO</title>
+    <style>
+        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; touch-action: manipulation; }
+        canvas { display: block; }
+        .ui { position: fixed; top: 10px; width: 100%; display: flex; justify-content: space-around; font-size: 20px; font-weight: bold; pointer-events: none; }
+        .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); z-index: 10; }
+        .btn { background: #d4af37; border: none; padding: 15px 30px; font-size: 18px; font-weight: bold; border-radius: 10px; cursor: pointer; color: #000; }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen" class="overlay">
+        <h1 style="color: #d4af37;">BINASOU HERO</h1>
+        <button class="btn" onclick="initGame()">إبدأ اللعب 🎮</button>
+    </div>
+
+    <div class="ui">
+        <div>🚀 المستوى: <span id="level-val">1</span></div>
+        <div>🔥 النقاط: <span id="score-val">0</span></div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let score = 0, level = 1, active = false, obstacles = [];
+        const hero = { x: 50, y: 0, w: 40, h: 60, dy: 0, jump: -15, grav: 0.8, onGround: false };
+
+        function initGame() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            document.getElementById('start-screen').style.display = 'none';
+            active = true;
+            loop();
+        }
+
+        function loop() {
+            if (!active) return;
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // الأرضية
+            const groundY = canvas.height - 80;
+            ctx.fillStyle = '#222';
+            ctx.fillRect(0, groundY, canvas.width, 80);
+
+            // فيزياء البطل
             hero.dy += hero.grav;
             hero.y += hero.dy;
-            if (hero.y > canvas.height - 80 - hero.h) {
-                hero.y = canvas.height - 80 - hero.h;
+            if (hero.y > groundY - hero.h) {
+                hero.y = groundY - hero.h;
                 hero.dy = 0;
-                hero.grounded = true;
+                hero.onGround = true;
             }
 
-            drawHero();
+            // رسم البطل
+            ctx.fillStyle = '#d4af37';
+            ctx.fillRect(hero.x, hero.y, hero.w, hero.h);
 
             // العوائق
-            if (Math.random() < 0.02) obstacles.push({ x: canvas.width, w: 35, h: 50 });
-
+            if (Math.random() < 0.02) obstacles.push({ x: canvas.width, w: 30, h: 40 });
             obstacles.forEach((o, i) => {
-                o.x -= (7 + level);
-                ctx.fillStyle = '#C0C0C0'; // عوائق فضية
-                ctx.fillRect(o.x, canvas.height - 80 - o.h, o.w, o.h);
+                o.x -= (6 + level);
+                ctx.fillStyle = '#ff4d4d';
+                ctx.fillRect(o.x, groundY - o.h, o.w, o.h);
 
-                // التصادم
-                if (hero.x < o.x + o.w && hero.x + hero.w > o.x && hero.y + hero.h > canvas.height - 80 - o.h) {
-                    location.reload(); 
+                // اصطدام
+                if (hero.x < o.x + o.w && hero.x + hero.w > o.x && hero.y + hero.h > groundY - o.h) {
+                    location.reload();
                 }
 
-                // النقاط والمستويات
                 if (o.x < -o.w) {
                     obstacles.splice(i, 1);
                     score++;
-                    document.getElementById('score').innerText = score;
-                    if (score % 10 === 0) {
-                        level++;
-                        document.getElementById('level').innerText = level;
-                        active = false;
-                        document.getElementById('ad-screen').classList.remove('hidden');
-                    }
+                    document.getElementById('score-val').innerText = score;
+                    if (score % 10 === 0) { level++; document.getElementById('level-val').innerText = level; }
                 }
             });
 
-            requestAnimationFrame(animate);
+            requestAnimationFrame(loop);
         }
 
-        // التحكم باللمس والماوس
-        const jumpAction = () => { if(hero.grounded && active) { hero.dy = hero.jump; hero.grounded = false; } };
-        window.addEventListener('touchstart', jumpAction);
-        window.addEventListener('mousedown', jumpAction);
+        window.addEventListener('touchstart', () => { if (hero.onGround && active) { hero.dy = hero.jump; hero.onGround = false; } });
+        window.addEventListener('mousedown', () => { if (hero.onGround && active) { hero.dy = hero.jump; hero.onGround = false; } });
     </script>
 </body>
 </html>
